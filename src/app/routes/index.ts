@@ -7,6 +7,9 @@ import { classSessionRoute } from '../modules/classSession/classSession.route';
 import { batchRoute } from '../modules/Batch/batch.route';
 import { ScheduleEntryRoutes } from '../modules/scheduleEntry/scheduleEntry.route';
 import { NoticeRoutes } from '../modules/notice/notice.route';
+import { teacherAvailabilityRoute } from '../modules/teacherAvailablity/teacher.routes';
+import { studentMark } from '../modules/studentMark/student.routes';
+import { attendanceRoute } from '../modules/attendence/attendance.routes';
 
 
 
@@ -44,6 +47,18 @@ const moduleRoutes = [
     {
         path: '/notice',
         route: NoticeRoutes
+    },
+    {
+        path: '/teacherAvailablity',
+        route: teacherAvailabilityRoute
+    },
+    {
+        path: '/mark',
+        route: studentMark
+    },
+    {
+        path: '/attendence',
+        route: attendanceRoute
     },
 ];
 

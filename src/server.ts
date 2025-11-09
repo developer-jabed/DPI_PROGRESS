@@ -1,46 +1,69 @@
-import { Server } from 'http';
-import app from './app';
-import config from './config';
+/* eslint-disable no-console */
+import { Server } from "http";
+import app from "./app";
+import { prisma } from "./app/shared/prisma";
+import config from "./config";
+import { seedAdmin } from "./app/helper/seedAdmin";
 
 
-async function bootstrap() {
-    // This variable will hold our server instance
-    let server: Server;
+// Optional: Redis connection placeholder
+// import { connectRedis } from "./app/config/redis.config";
 
-    try {
-        // Start the server
-        server = app.listen(config.port, () => {
-            console.log(`🚀 Server is running on http://localhost:${config.port}`);
-        });
+let server: Server;
 
-        // Function to gracefully shut down the server
-        const exitHandler = () => {
-            if (server) {
-                server.close(() => {
-                    console.log('Server closed gracefully.');
-                    process.exit(1); // Exit with a failure code
-                });
-            } else {
-                process.exit(1);
-            }
-        };
+const startServer = async () => {
+  try {
+    // ✅ Connect to Prisma (PostgreSQL)
+    await prisma.$connect();
+    console.log("✅ Connected to PostgreSQL via Prisma!");
 
-        // Handle unhandled promise rejections
-        process.on('unhandledRejection', (error) => {
-            console.log('Unhandled Rejection is detected, we are closing our server...');
-            if (server) {
-                server.close(() => {
-                    console.log(error);
-                    process.exit(1);
-                });
-            } else {
-                process.exit(1);
-            }
-        });
-    } catch (error) {
-        console.error('Error during server startup:', error);
-        process.exit(1);
-    }
-}
+    // ✅ Start Express server
+    server = app.listen(config.port, () => {
+      console.log(`🚀 Server running on http://localhost:${config.port}`);
+    });
+  } catch (error) {
+    console.error("❌ Database connection failed:", error);
+    process.exit(1);
+  }
+};
 
-bootstrap();
+(async () => {
+  try {
+    // await connectRedis(); // If Redis is used
+    await startServer();
+    await seedAdmin(); // Seed default Admin if not exists
+  } catch (error) {
+    console.error("❌ Startup Error:", error);
+    process.exit(1);
+  }
+})();
+
+// ✅ Handle graceful shutdowns and crashes
+const gracefulShutdown = (signal: string) => {
+  console.log(`${signal} received. Shutting down gracefully...`);
+
+  if (server) {
+    server.close(async () => {
+      console.log("HTTP server closed.");
+      await prisma.$disconnect();
+      process.exit(0);
+    });
+  } else {
+    process.exit(0);
+  }
+};
+
+// Handle process signals
+process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
+process.on("SIGINT", () => gracefulShutdown("SIGINT"));
+
+// Handle unexpected errors
+process.on("unhandledRejection", (err) => {
+  console.error("🚨 Unhandled Rejection detected:", err);
+  gracefulShutdown("unhandledRejection");
+});
+
+process.on("uncaughtException", (err) => {
+  console.error("🚨 Uncaught Exception detected:", err);
+  gracefulShutdown("uncaughtException");
+});

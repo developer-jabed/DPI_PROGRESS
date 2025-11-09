@@ -32,10 +32,15 @@ const createTeacherValidationSchema = z.object({
 
 const createCrValidationSchema = z.object({
   data: baseUserSchema.extend({
-    role: z.literal(Role.CR),
+    role: z.literal(Role.CR), // <--- literal, cannot accept "CR" from request
+    rollNumber: z.string(),
+    registrationNumber: z.string(),
+    phoneNumber: z.string(),
+    parentsPhone: z.string(),
     batchId: z.string(),
   }),
 });
+
 
 const createAdminValidationSchema = z.object({
   data: baseUserSchema.extend({

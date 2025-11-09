@@ -15,6 +15,13 @@ enum Role {
   STUDENT
 }
 
+enum AttendanceStatus {
+  DRAFT        // Not yet submitted
+  PRESENT
+  ABSENT
+  VACATION     // Sick or other reasons
+}  
+
 enum Shift {
   MORNING
   DAY
@@ -50,11 +57,10 @@ model User {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  student Student? @relation("UserStudent")
-  teacher Teacher? @relation("UserTeacher")
-  cr      Cr?      @relation("UserCr")
-  admin   Admin?   @relation("UserAdmin")
-
+  student          Student?           @relation("UserStudent")
+  teacher          Teacher?           @relation("UserTeacher")
+  cr               Cr?                @relation("UserCr")
+  admin            Admin?             @relation("UserAdmin")
   notices          Notice[]           @relation("NoticePostedBy")
   attendanceMarked AttendanceRecord[] @relation("MarkedBy")
   attendanceAudits AttendanceAudit[]  @relation("ChangedBy")
@@ -97,7 +103,7 @@ model Subject {
   departments Department[] @relation("DepartmentSubjects")
 
   // Many-to-many relation with Teacher
-  teachers    Teacher[]    @relation("TeacherSubjects")
+  teachers Teacher[] @relation("TeacherSubjects")
 
   schedules ScheduleEntry[]
 }
@@ -142,21 +148,19 @@ model TeacherLeave {
 
 // ===================== BATCHES & STUDENTS =====================
 model Batch {
-  id           String      @id @default(uuid())
+  id           String                 @id @default(uuid())
   year         Int
   semester     Int
   shift        Shift
   groupName    GroupName
-  department   Department? @relation("DepartmentBatches", fields: [departmentId], references: [id])
+  department   Department?            @relation("DepartmentBatches", fields: [departmentId], references: [id])
   departmentId String?
-
-  students  Student[]
-  schedules BatchOnScheduleEntry[] @relation("BatchScheduleEntries")
-  cr        Cr?                    @relation("BatchCr")
-  notices   Notice[]               @relation("BatchNotices")
+  students     Student[]
+  schedules    BatchOnScheduleEntry[] @relation("BatchScheduleEntries")
+  cr           Cr?                    @relation("BatchCr")
+  notices      Notice[]               @relation("BatchNotices")
 }
 
-// ===================== STUDENTS =====================
 model Student {
   id                 String             @id @default(uuid())
   user               User               @relation("UserStudent", fields: [userId], references: [id])
@@ -171,16 +175,20 @@ model Student {
   extraMarks         ExtraMark[]
   penalties          Penalty[]
   firstLogin         Boolean            @default(true)
+
+  // Correct relation name and backreference to Cr
+  cr Cr? @relation("StudentCr")
 }
 
-// ===================== CLASS REPRESENTATIVE =====================
 model Cr {
-  id      String @id @default(uuid())
-  user    User   @relation("UserCr", fields: [userId], references: [id])
-  userId  String @unique
-
-  batch   Batch  @relation("BatchCr", fields: [batchId], references: [id])
-  batchId String @unique
+  id        String  @id @default(uuid())
+  // A CR is a specific user (who must also be a student)
+  user      User    @relation("UserCr", fields: [userId], references: [id])
+  userId    String  @unique
+  student   Student @relation("StudentCr", fields: [studentId], references: [id])
+  studentId String  @unique
+  batch     Batch   @relation("BatchCr", fields: [batchId], references: [id])
+  batchId   String  @unique
 }
 
 // ===================== CLASSROOM =====================
@@ -195,24 +203,23 @@ model Classroom {
 
 // ===================== SCHEDULE & CLASS SESSIONS =====================
 model ScheduleEntry {
-  id           String         @id @default(uuid())
-  department   Department     @relation("DepartmentSchedules", fields: [departmentId], references: [id])
+  id           String                 @id @default(uuid())
+  department   Department             @relation("DepartmentSchedules", fields: [departmentId], references: [id])
   departmentId String
-  subject      Subject        @relation(fields: [subjectId], references: [id])
+  subject      Subject                @relation(fields: [subjectId], references: [id])
   subjectId    String
-  teacher      Teacher?       @relation(fields: [teacherId], references: [id])
+  teacher      Teacher?               @relation(fields: [teacherId], references: [id])
   teacherId    String?
   dayOfWeek    Int
   slotIndex    Int
   shift        Shift
   groupName    GroupName
-  classroom    Classroom?     @relation(fields: [classroomId], references: [id])
+  classroom    Classroom?             @relation(fields: [classroomId], references: [id])
   classroomId  String?
-  isPractical  Boolean        @default(false)
+  isPractical  Boolean                @default(false)
   sessions     ClassSession[]
-
   // Many-to-many with batches
-  batches BatchOnScheduleEntry[]
+  batches      BatchOnScheduleEntry[]
 }
 
 // Many-to-many pivot table
@@ -226,29 +233,29 @@ model BatchOnScheduleEntry {
 
 // ===================== CLASS SESSIONS =====================
 model ClassSession {
-  id              String         @id @default(uuid())
-  scheduleEntry   ScheduleEntry? @relation(fields: [scheduleEntryId], references: [id])
+  id              String             @id @default(uuid())
+  scheduleEntry   ScheduleEntry?     @relation(fields: [scheduleEntryId], references: [id])
   scheduleEntryId String?
   date            DateTime
-  status          SessionStatus  @default(SCHEDULED)
+  status          SessionStatus      @default(SCHEDULED)
   attendance      AttendanceRecord[]
-  createdAt       DateTime       @default(now())
+  createdAt       DateTime           @default(now())
 }
 
 // ===================== ATTENDANCE =====================
 model AttendanceRecord {
-  id         String           @id @default(uuid())
-  session    ClassSession     @relation(fields: [sessionId], references: [id])
+  id         String            @id @default(uuid())
+  session    ClassSession      @relation(fields: [sessionId], references: [id])
   sessionId  String
-  student    Student          @relation(fields: [studentId], references: [id])
+  student    Student           @relation(fields: [studentId], references: [id])
   studentId  String
   present    Boolean
-  markedBy   User             @relation("MarkedBy", fields: [markedById], references: [id])
+  markedBy   User              @relation("MarkedBy", fields: [markedById], references: [id])
   markedById String
-  status     AttendanceStatus @default(DRAFT)
+  status     AttendanceStatus  @default(DRAFT)
   reason     String?
-  createdAt  DateTime         @default(now())
-  updatedAt  DateTime         @updatedAt
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
   audits     AttendanceAudit[]
 }
 
@@ -290,23 +297,19 @@ model Penalty {
 
 // ===================== NOTICES =====================
 model Notice {
-  id         String @id @default(uuid())
-  title      String
-  body       String
-  postedBy   User   @relation("NoticePostedBy", fields: [postedById], references: [id])
-  postedById String
-
+  id           String      @id @default(uuid())
+  title        String
+  body         String
+  postedBy     User        @relation("NoticePostedBy", fields: [postedById], references: [id])
+  postedById   String
   department   Department? @relation("DepartmentNotices", fields: [departmentId], references: [id])
   departmentId String?
-
   batch        Batch?      @relation("BatchNotices", fields: [batchId], references: [id])
   batchId      String?
-
   shift        Shift?
   groupName    GroupName?
   targetRole   Role?
   isPublic     Boolean     @default(false)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
 }

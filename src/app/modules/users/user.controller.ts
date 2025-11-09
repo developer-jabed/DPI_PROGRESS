@@ -8,7 +8,7 @@ export class UserController {
 
   // =================== GET ALL USERS ===================
   static getAllUsers = catchAsync(async (req: Request, res: Response) => {
-    const users = await UserService.getAll();
+    const users = await UserService.getAllUsers();
     sendResponse(res, {
       statusCode: 200,
       success: true,
