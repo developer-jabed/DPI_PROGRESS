@@ -1,9 +1,11 @@
 /* eslint-disable no-console */
 import { Server } from "http";
 import app from "./app";
-import { prisma } from "./app/shared/prisma";
 import config from "./config";
 import { seedAdmin } from "./app/helper/seedAdmin";
+import 'dotenv/config'; // loads .env automatically
+import { prisma } from "./app/shared/prisma";
+
 
 
 // Optional: Redis connection placeholder
@@ -20,6 +22,7 @@ const startServer = async () => {
     // ✅ Start Express server
     server = app.listen(config.port, () => {
       console.log(`🚀 Server running on http://localhost:${config.port}`);
+
     });
   } catch (error) {
     console.error("❌ Database connection failed:", error);
@@ -45,6 +48,7 @@ const gracefulShutdown = (signal: string) => {
   if (server) {
     server.close(async () => {
       console.log("HTTP server closed.");
+
       await prisma.$disconnect();
       process.exit(0);
     });

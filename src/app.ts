@@ -5,6 +5,8 @@ import notFound from './app/middlewares/notFound';
 import config from './config';
 import router from './app/routes';
 import cookieParser from 'cookie-parser'
+import 'dotenv/config'; // loads .env automatically
+
 
 
 const app: Application = express();

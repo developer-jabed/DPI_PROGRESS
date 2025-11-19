@@ -1,43 +1,25 @@
-import { Role } from "@prisma/client";
+import { UserRole, Department } from "@prisma/client";
 
-export interface IUserBase {
-  displayName?: string;
-  email?: string;
-  password: string;
-  role: Role;
-  profileUrl?: string;
-}
-
-export interface ICreateStudent {
-  rollNumber: string;
-  registrationNumber: string;
-  phoneNumber: string;
-  parentsPhone: string;
-  batchId: string;
-}
-
-export interface ICreateTeacher {
-  bio?: string;
-  phoneNumber?: string;
-  departmentId: string;
-  subjects?: string[];
-}
-
-export interface ICreateCr {
-  batchId: string;
-}
-
-export interface ICreateAdmin {
-  displayName: string;
+export interface ICreateUser {
   email: string;
   password: string;
+  displayName: string;
+  role: UserRole;
+  profileUrl?: string;
+  status?: "ACTIVE" | "INACTIVE";
+  batchId?: string;
+  studentId?: string;
+  phoneNumber?: string;
+  parentsPhone?: string;
+  designation?: string;
+  bio?: string;
+  department?: Department;
 }
 
-export interface IUserResponse {
-  id: string;
-  email?: string;
-  displayName?: string;
-  role: Role;
-  profileUrl?: string;
-  createdAt: Date;
+export interface IQueryOptions {
+  page?: number | string;
+  limit?: number | string;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+  searchTerm?: string;
 }

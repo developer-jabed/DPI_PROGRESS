@@ -3,6 +3,7 @@ export type IOptions = {
     limit?: string | number;
     sortBy?: string;
     sortOrder?: string;
+    total?:string | number;
 }
 
 type IOptionsResult = {

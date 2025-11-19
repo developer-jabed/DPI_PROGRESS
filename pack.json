@@ -1,0 +1,99 @@
+{
+  "info": {
+    "name": "Batch Management API",
+    "_postman_id": "abcd1234-5678-efgh-ijkl-9876543210",
+    "description": "API collection for managing batches",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Create Batch",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Computer 1st Semester\",\n  \"department\": \"COMPUTER\",\n  \"group\": \"A\",\n  \"shift\": \"MORNING\",\n  \"semesterId\": \"semester-uuid-1\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/v1/batch",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "v1", "batch"]
+        }
+      }
+    },
+    {
+      "name": "Get All Batches",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/api/v1/batch?page=1&limit=10&sortBy=createdAt&sortOrder=desc&searchTerm=Computer",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "v1", "batch"],
+          "query": [
+            { "key": "page", "value": "1" },
+            { "key": "limit", "value": "10" },
+            { "key": "sortBy", "value": "createdAt" },
+            { "key": "sortOrder", "value": "desc" },
+            { "key": "searchTerm", "value": "Computer" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Get Batch by ID",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/api/v1/batch/{{batchId}}",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "v1", "batch", "{{batchId}}"]
+        }
+      }
+    },
+    {
+      "name": "Update Batch",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Computer 2nd Semester\",\n  \"department\": \"COMPUTER\",\n  \"group\": \"A\",\n  \"shift\": \"MORNING\",\n  \"semesterId\": \"semester-uuid-2\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/v1/batch/{{batchId}}",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "v1", "batch", "{{batchId}}"]
+        }
+      }
+    },
+    {
+      "name": "Delete Batch",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/api/v1/batch/{{batchId}}",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "v1", "batch", "{{batchId}}"]
+        }
+      }
+    }
+  ]
+}

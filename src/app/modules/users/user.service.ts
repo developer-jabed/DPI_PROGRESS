@@ -1,254 +1,123 @@
-import { Request } from "express";
-import { prisma } from "../../shared/prisma";
 import bcrypt from "bcrypt";
-import { Admin, Teacher, Student, Cr, Role, Prisma } from "@prisma/client";
-import { fileUploader } from "../../helper/fileUploader";
+import { Department, Prisma, PrismaClient } from "@prisma/client"; // ✅ Import Department enum
+import { ICreateUser, IQueryOptions } from "./user.interface";
+import { paginationHelper } from "../../helper/paginationHelper";
 
-// =================== CREATE STUDENT ===================
-const createStudent = async (req: Request): Promise<Student> => {
-  const data = req.body.data;
+const prisma = new PrismaClient();
 
-  if (req.file) {
-    const uploadResult = await fileUploader.uploadToCloudinary(req.file);
-    data.profileUrl = uploadResult?.secure_url;
-  }
+export const UserService = {
+  createUser: async (payload: ICreateUser) => {
 
-  const hashedPassword = await bcrypt.hash(data.password, 10);
+    const hashedPassword = await bcrypt.hash(payload.password, 10);
 
-  const student = await prisma.$transaction(async (tx) => {
-    const user = await tx.user.create({
+    const user = await prisma.user.create({
       data: {
-        displayName: data.displayName,
-        email: data.email,
+        email: payload.email,
         password: hashedPassword,
-        role: Role.STUDENT,
-        profileUrl: data.profileUrl,
+        displayName: payload.displayName,
+        role: payload.role,
+        profileUrl: payload.profileUrl,
+        status: payload.status,
       },
     });
 
-    const createdStudent = await tx.student.create({
-      data: {
-        userId: user.id,
-        rollNumber: data.rollNumber,
-        registrationNumber: data.registrationNumber,
-        phoneNumber: data.phoneNumber,
-        parentsPhone: data.parentsPhone,
-        batchId: data.batchId,
-      },
-    });
-
-    return createdStudent;
-  });
-
-  return student;
-};
-
-// =================== CREATE TEACHER ===================
-const createTeacher = async (req: Request): Promise<Teacher> => {
-  const data = req.body.data;
-
-  if (req.file) {
-    const uploadResult = await fileUploader.uploadToCloudinary(req.file);
-    data.profileUrl = uploadResult?.secure_url;
-  }
-
-  const hashedPassword = await bcrypt.hash(data.password, 10);
-
-  const teacher = await prisma.$transaction(async (tx) => {
-    const user = await tx.user.create({
-      data: {
-        displayName: data.displayName,
-        email: data.email,
-        password: hashedPassword,
-        role: Role.TEACHER,
-        profileUrl: data.profileUrl,
-      },
-    });
-
-    const createdTeacher = await tx.teacher.create({
-      data: {
-        userId: user.id,
-        bio: data.bio,
-        phoneNumber: data.phoneNumber,
-        departmentId: data.departmentId,
-      },
-    });
-
-    // Connect subjects if provided
-    if (data.subjects?.length) {
-      await tx.teacher.update({
-        where: { id: createdTeacher.id },
-        data: {
-          subjects: {
-            connect: data.subjects.map((id: string) => ({ id })),
+    switch (payload.role) {
+      case "STUDENT":
+        if (!payload.batchId || !payload.phoneNumber || !payload.parentsPhone) {
+          throw new Error("Missing required fields for STUDENT");
+        }
+        await prisma.student.create({
+          data: {
+            userId: user.id,
+            batchId: payload.batchId,
+            rollNumber: `R-${Date.now()}`,
+            registration: `REG-${Date.now()}`,
+            phoneNumber: payload.phoneNumber,
+            parentsPhone: payload.parentsPhone,
           },
-        },
-      });
+        });
+        break;
+
+      case "TEACHER":
+        if (!payload.department) throw new Error("Missing department for TEACHER");
+        await prisma.teacher.create({
+          data: {
+            userId: user.id,
+            department: payload.department as Department,
+            phoneNumber: payload.phoneNumber,
+            bio: payload.bio,
+            profileUrl: payload.profileUrl,
+          },
+        });
+        break;
+
+      case "ADMIN":
+        await prisma.admin.create({
+          data: {
+            userId: user.id,
+            phoneNumber: payload.phoneNumber,
+            designation: payload.designation,
+            profileUrl: payload.profileUrl,
+          },
+        });
+        break;
+
+      case "CR":
+        if (!payload.batchId || !payload.studentId) {
+          throw new Error("Missing batchId or studentId for CR");
+        }
+        await prisma.cR.create({
+          data: {
+            userId: user.id,
+            batchId: payload.batchId,
+            studentId: payload.studentId,
+          },
+        });
+        break;
+
+      default:
+        throw new Error("Invalid user role");
     }
 
-    return createdTeacher;
-  });
+    return user;
+  },
 
-  return teacher;
-};
+  getUsers: async (options: IQueryOptions) => {
+    const { page, limit, skip, sortBy, sortOrder } = paginationHelper.calculatePagination(options);
 
-// =================== CREATE CR ===================
-const createCr = async (req: Request): Promise<Cr> => {
-  const data = req.body.data;
+    const searchFilter: Prisma.UserWhereInput | undefined = options.searchTerm
+      ? {
+        OR: [
+          { email: { contains: options.searchTerm, mode: "insensitive" as Prisma.QueryMode } },
+          { displayName: { contains: options.searchTerm, mode: "insensitive" as Prisma.QueryMode } },
+        ],
+      }
+      : undefined;
 
-  if (req.file) {
-    const uploadResult = await fileUploader.uploadToCloudinary(req.file);
-    data.profileUrl = uploadResult?.secure_url;
-  }
+    const [total, users] = await prisma.$transaction([
+      prisma.user.count({ where: searchFilter }),
+      prisma.user.findMany({
+        where: searchFilter,
+        skip,
+        take: limit,
+        orderBy: { [sortBy]: sortOrder },
+        include: {
+          student: true,
+          teacher: true,
+          admin: true,
+          cr: true,
+        },
+      }),
+    ]);
 
-  const hashedPassword = await bcrypt.hash(data.password, 10);
-
-  const cr = await prisma.$transaction(async (tx) => {
-    // 1️⃣ Create User
-    const user = await tx.user.create({
-      data: {
-        displayName: data.displayName,
-        email: data.email,
-        password: hashedPassword,
-        role: Role.CR,
-        profileUrl: data.profileUrl,
+    return {
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
       },
-    });
-
-    // 2️⃣ Create Student
-    const student = await tx.student.create({
-      data: {
-        userId: user.id,
-        rollNumber: data.rollNumber,
-        registrationNumber: data.registrationNumber,
-        phoneNumber: data.phoneNumber,
-        parentsPhone: data.parentsPhone,
-        batchId: data.batchId,
-      },
-    });
-
-    // 3️⃣ Create CR
-    const createdCr = await tx.cr.create({
-      data: {
-        userId: user.id,
-        studentId: student.id as string, // UncheckedCreate if TS complains
-        batchId: data.batchId,
-      },
-      include: {
-        user: true,
-        student: true,
-        batch: true,
-      },
-    });
-
-    return createdCr;
-  });
-
-  return cr;
-};
-
-// =================== CREATE ADMIN ===================
-const createAdmin = async (req: Request): Promise<Admin> => {
-  const data = req.body.data;
-
-  if (req.file) {
-    const uploadResult = await fileUploader.uploadToCloudinary(req.file);
-    data.profileUrl = uploadResult?.secure_url;
-  }
-
-  const hashedPassword = await bcrypt.hash(data.password, 10);
-
-  const admin = await prisma.$transaction(async (tx) => {
-    const user = await tx.user.create({
-      data: {
-        displayName: data.displayName,
-        email: data.email,
-        password: hashedPassword,
-        role: Role.ADMIN,
-        profileUrl: data.profileUrl,
-      },
-    });
-
-    const createdAdmin = await tx.admin.create({
-      data: {
-        userId: user.id,
-        profileUrl: data.profileUrl,
-        phoneNumber: data.phoneNumber,
-        designation: data.designation,
-      },
-    });
-
-    return createdAdmin;
-  });
-
-  return admin;
-};
-
-// =================== GET ALL USERS WITH SEARCH, SORT, PAGINATION ===================
-interface GetAllUsersOptions {
-  search?: string;
-  role?: Role;
-  sortBy?: "displayName" | "email" | "createdAt";
-  sortOrder?: "asc" | "desc";
-  page?: number;
-  limit?: number;
-}
-
-const getAllUsers = async (options: GetAllUsersOptions = {}) => {
-  const {
-    search,
-    role,
-    sortBy = "createdAt",
-    sortOrder = "desc",
-    page = 1,
-    limit = 10,
-  } = options;
-
-  const skip = (page - 1) * limit;
-
-  const where: Prisma.UserWhereInput = {};
-
-  if (search) {
-    where.OR = [
-      { displayName: { contains: search, mode: "insensitive" } },
-      { email: { contains: search, mode: "insensitive" } },
-    ];
-  }
-
-  if (role) {
-    where.role = role;
-  }
-
-  const [users, total] = await prisma.$transaction([
-    prisma.user.findMany({
-      where,
-      include: {
-        student: true,
-        teacher: true,
-        cr: true,
-        admin: true,
-      },
-      orderBy: { [sortBy]: sortOrder },
-      skip,
-      take: limit,
-    }),
-    prisma.user.count({ where }),
-  ]);
-
-  return {
-    users,
-    total,
-    page,
-    limit,
-    totalPages: Math.ceil(total / limit),
-  };
-};
-
-// =================== EXPORT ===================
-export const UserService = {
-  createStudent,
-  createTeacher,
-  createCr,
-  createAdmin,
-  getAllUsers,
+      data: users,
+    };
+  },
 };

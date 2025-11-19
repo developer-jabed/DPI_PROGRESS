@@ -1,7 +1,7 @@
 import bcrypt from "bcrypt";
 import { prisma } from "../shared/prisma";
-import { Role } from "@prisma/client";
 import config from "../../config";
+import { UserRole } from "@prisma/client";
 
 export const seedAdmin = async () => {
   try {
@@ -33,7 +33,7 @@ export const seedAdmin = async () => {
         displayName: "Admin",
         email: config.ADMIN_EMAIL,
         password: hashedPassword,
-        role: Role.ADMIN,
+        role: UserRole.ADMIN,
         profileUrl: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png",
       },
     });
@@ -49,7 +49,6 @@ export const seedAdmin = async () => {
     });
 
     console.log("🎉 Admin created successfully!");
-    console.log(user);
   } catch (error) {
     console.error("❌ Error seeding admin:", error);
   } finally {

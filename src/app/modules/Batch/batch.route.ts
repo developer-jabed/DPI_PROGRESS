@@ -1,3 +1,4 @@
+// src/modules/batch/batch.route.ts
 import express from "express";
 import { BatchController } from "./batch.controller";
 
@@ -7,6 +8,6 @@ router.post("/", BatchController.createBatch);
 router.get("/", BatchController.getAllBatches);
 router.get("/:id", BatchController.getBatchById);
 router.put("/:id", BatchController.updateBatch);
-router.delete("/:id", BatchController.deleteBatch);
+
 
 export const batchRoute = router;

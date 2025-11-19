@@ -1,58 +1,62 @@
 import { z } from "zod";
-import { Role } from "@prisma/client";
+import { Department, UserRole } from "@prisma/client";
 
-const baseUserSchema = z.object({
-  displayName: z.string().optional(),
-  email: z.string().email().optional(),
+const departmentEnum = z.nativeEnum(Department);
+const roleEnum = z.nativeEnum(UserRole);
+
+// ----------------- Create Student -----------------
+export const createStudentValidationSchema = z.object({
+  email: z.string().email(),
   password: z.string().min(6),
-  role: z.nativeEnum(Role),
+  displayName: z.string().min(2),
+  role: z.literal("STUDENT"),
+  profileUrl: z.string().optional(),
+  status: z.enum(["ACTIVE", "INACTIVE"]).optional(),
+  batchId: z.string(),
+  phoneNumber: z.string(),
+  parentsPhone: z.string(),
 });
 
-const createStudentValidationSchema = z.object({
-  data: baseUserSchema.extend({
-    role: z.literal(Role.STUDENT),
-    rollNumber: z.string(),
-    registrationNumber: z.string(),
-    phoneNumber: z.string(),
-    parentsPhone: z.string(),
-    batchId: z.string(),
-  }),
+// ----------------- Create Teacher -----------------
+export const createTeacherValidationSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(6),
+  displayName: z.string().min(2),
+  role: z.literal("TEACHER"),
+  profileUrl: z.string().optional(),
+  status: z.enum(["ACTIVE", "INACTIVE"]).optional(),
+  department: departmentEnum,
+  phoneNumber: z.string().optional(),
+  bio: z.string().optional(),
 });
 
-const createTeacherValidationSchema = z.object({
-  data: baseUserSchema.extend({
-    role: z.literal(Role.TEACHER),
-    bio: z.string().optional(),
-    phoneNumber: z.string().optional(),
-    departmentId: z.string(),
-    subjects: z.array(z.string()).optional(),
-    profileUrl: z.string().optional(),
-  }),
+// ----------------- Create Admin -----------------
+export const createAdminValidationSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(6),
+  displayName: z.string().min(2),
+  role: z.literal("ADMIN"),
+  profileUrl: z.string().optional(),
+  status: z.enum(["ACTIVE", "INACTIVE"]).optional(),
+  phoneNumber: z.string().optional(),
+  designation: z.string().optional(),
 });
 
-const createCrValidationSchema = z.object({
-  data: baseUserSchema.extend({
-    role: z.literal(Role.CR), // <--- literal, cannot accept "CR" from request
-    rollNumber: z.string(),
-    registrationNumber: z.string(),
-    phoneNumber: z.string(),
-    parentsPhone: z.string(),
-    batchId: z.string(),
-  }),
-});
-
-
-const createAdminValidationSchema = z.object({
-  data: baseUserSchema.extend({
-    role: z.literal(Role.ADMIN),
-    displayName: z.string(),
-    email: z.string().email(),
-  }),
+// ----------------- Create CR -----------------
+export const createCRValidationSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(6),
+  displayName: z.string().min(2),
+  role: z.literal("CR"),
+  profileUrl: z.string().optional(),
+  status: z.enum(["ACTIVE", "INACTIVE"]).optional(),
+  batchId: z.string(),
+  studentId: z.string(),
 });
 
 export const UserValidation = {
   createStudentValidationSchema,
   createTeacherValidationSchema,
-  createCrValidationSchema,
   createAdminValidationSchema,
+  createCRValidationSchema,
 };
