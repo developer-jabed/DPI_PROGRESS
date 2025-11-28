@@ -1,0 +1,186 @@
+// =======================
+// prisma/academy.prisma
+// =======================
+model Department {
+  id       String     @id @default(uuid())
+  name     DepartmentName   @unique
+  batches  Batch[]
+  subjects Subject[]
+
+  @@map("departments")
+}
+
+model Semester {
+  id       String         @id @default(uuid())
+  name     SemesterName   @unique
+  batches  Batch[]
+  promotionsFrom SemesterPromotion[] @relation("FromSemester")
+  promotionsTo   SemesterPromotion[] @relation("ToSemester")
+
+  @@map("semesters")
+}
+
+model Batch {
+  id           String     @id @default(uuid())
+  department   Department @relation(fields: [departmentId], references: [id])
+  departmentId String
+  semester     Semester   @relation(fields: [semesterId], references: [id])
+  semesterId   String
+  shift        Shift
+  year         Int
+  groups       Group[]
+  teachers     Teacher[]  @relation("TeacherBatches")
+  batchSubjects BatchSubject[]
+  routines     Routine[]
+  formFillUps  FormFillUp[]
+  events       Event[]        @relation("BatchEvents")
+  notifications Notification[] @relation("BatchNotifications")
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @default(now())
+
+  attendances Attendance[]
+
+  @@map("batches")
+}
+
+model Group {
+  id       String       @id @default(uuid())
+  name     GroupName
+  batch    Batch        @relation(fields: [batchId], references: [id])
+  batchId  String
+  students StudentGroup[]
+  cr       Cr?          @relation("CRGroup")
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @default(now())
+}
+
+model Subject {
+  id           String     @id @default(uuid())
+  name         String     @unique
+  code         String?
+  department   Department? @relation(fields: [departmentId], references: [id])
+  departmentId String?
+  batchSubjects BatchSubject[]
+  teacherSubjects TeacherSubject[]
+  attendances  Attendance[]
+  routines     Routine[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @default(now())
+}
+
+model BatchSubject {
+  id        String   @id @default(uuid())
+  batch     Batch    @relation(fields: [batchId], references: [id])
+  batchId   String
+  subject   Subject  @relation(fields: [subjectId], references: [id])
+  subjectId String
+  createdAt DateTime @default(now())
+}
+
+model TeacherSubject {
+  id        String   @id @default(uuid())
+  teacher   Teacher  @relation(fields: [teacherId], references: [id])
+  teacherId String
+  subject   Subject  @relation(fields: [subjectId], references: [id])
+  subjectId String
+  createdAt DateTime @default(now())
+}
+
+model Attendance {
+  id             String         @id @default(uuid())
+  student        Student        @relation(fields: [studentId], references: [id])
+  studentId      String
+  batch          Batch          @relation(fields: [batchId], references: [id])
+  batchId        String
+  subject        Subject        @relation(fields: [subjectId], references: [id])
+  subjectId      String
+  teacher        Teacher        @relation(fields: [teacherId], references: [id])
+  teacherId      String
+  attendanceType AttendanceType
+  date           DateTime
+  notes          String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @default(now())
+}
+
+model Routine {
+  id         String   @id @default(uuid())
+  batch      Batch    @relation(fields: [batchId], references: [id])
+  batchId    String
+  subject    Subject  @relation(fields: [subjectId], references: [id])
+  subjectId  String
+  teacher    Teacher  @relation(fields: [teacherId], references: [id])
+  teacherId  String
+  day        String
+  startTime  String
+  endTime    String
+  room       String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now())
+
+  students Student[] @relation("StudentRoutines")
+}
+
+model Notification {
+  id         String   @id @default(uuid())
+  title      String
+  content    String
+  type       NotificationType
+  batch      Batch?   @relation("BatchNotifications", fields: [batchId], references: [id])
+  batchId    String?
+  student    Student? @relation("StudentNotifications", fields: [studentId], references: [id])
+  studentId  String?
+  teacher    Teacher? @relation("TeacherNotifications", fields: [teacherId], references: [id])
+  teacherId  String?
+  expiry     DateTime?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now())
+}
+
+model Event {
+  id         String   @id @default(uuid())
+  name       String
+  description String
+  departmentId String?
+  semesterId String?
+  batch      Batch?   @relation("BatchEvents", fields: [batchId], references: [id])
+  batchId    String?
+  groupId    String?
+  createdByTeacher Teacher? @relation("TeacherEvents", fields: [teacherId], references: [id])
+  teacherId  String?
+  date       DateTime
+  time       String
+  venue      String
+  image      String?
+  registrationLink String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now())
+}
+
+model FormFillUp {
+  id           String   @id @default(uuid())
+  student      Student  @relation(fields: [studentId], references: [id])
+  studentId    String
+  batch        Batch    @relation(fields: [batchId], references: [id])
+  batchId      String
+  feeAmount    Float
+  isPaid       Boolean  @default(false)
+  submissionDate DateTime?
+  verifiedBy   String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @default(now())
+}
+
+model SemesterPromotion {
+  id             String   @id @default(uuid())
+  student        Student  @relation(fields: [studentId], references: [id])
+  studentId      String
+  fromSemester   Semester @relation("FromSemester", fields: [fromSemesterId], references: [id])
+  fromSemesterId String
+  toSemester     Semester @relation("ToSemester", fields: [toSemesterId], references: [id])
+  toSemesterId   String
+  status         PromotionStatus
+  carrySubjects  String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @default(now())
+}

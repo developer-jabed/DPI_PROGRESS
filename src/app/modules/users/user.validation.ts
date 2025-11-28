@@ -1,62 +1,120 @@
 import { z } from "zod";
-import { Department, UserRole } from "@prisma/client";
+import { Gender, UserStatus, BloodGroup } from "@prisma/client";
 
-const departmentEnum = z.nativeEnum(Department);
-const roleEnum = z.nativeEnum(UserRole);
-
-// ----------------- Create Student -----------------
-export const createStudentValidationSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(6),
-  displayName: z.string().min(2),
-  role: z.literal("STUDENT"),
-  profileUrl: z.string().optional(),
-  status: z.enum(["ACTIVE", "INACTIVE"]).optional(),
-  batchId: z.string(),
-  phoneNumber: z.string(),
-  parentsPhone: z.string(),
+// ---------------- CREATE ADMIN ----------------
+const createAdmin = z.object({
+  password: z.string({
+    error: "Password is required",
+  }),
+  admin: z.object({
+    name: z.string({
+      error: "Name is required!",
+    }),
+    email: z.string({
+      error: "Email is required!",
+    }).email("Invalid email"),
+    contactNumber: z.string({
+      error: "Contact Number is required!",
+    }),
+    profilePhoto: z.string().optional(),
+  }),
 });
 
-// ----------------- Create Teacher -----------------
-export const createTeacherValidationSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(6),
-  displayName: z.string().min(2),
-  role: z.literal("TEACHER"),
-  profileUrl: z.string().optional(),
-  status: z.enum(["ACTIVE", "INACTIVE"]).optional(),
-  department: departmentEnum,
-  phoneNumber: z.string().optional(),
-  bio: z.string().optional(),
+// ---------------- CREATE TEACHER ----------------
+const createTeacher = z.object({
+  password: z.string({
+    error: "Password is required",
+  }),
+  teacher: z.object({
+    name: z.string({
+      error: "Name is required!",
+    }),
+    email: z.string({
+      error: "Email is required!",
+    }).email("Invalid email"),
+    contactNumber: z.string({
+      error: "Contact Number is required!",
+    }),
+    qualification: z.string({
+      error: "Qualification is required!",
+    }),
+    bio: z.string().optional(),
+    profilePhoto: z.string().optional(),
+  }),
 });
 
-// ----------------- Create Admin -----------------
-export const createAdminValidationSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(6),
-  displayName: z.string().min(2),
-  role: z.literal("ADMIN"),
-  profileUrl: z.string().optional(),
-  status: z.enum(["ACTIVE", "INACTIVE"]).optional(),
-  phoneNumber: z.string().optional(),
-  designation: z.string().optional(),
+// ---------------- CREATE STUDENT ----------------
+const createStudent = z.object({
+  password: z.string({
+    error: "Password is required",
+  }),
+  student: z.object({
+    name: z.string({
+      error: "Name is required!",
+    }),
+    email: z.string({
+      error: "Email is required!",
+    }).email("Invalid email"),
+    contactNumber: z.string({
+      error: "Contact Number is required!",
+    }),
+    parentsNumber: z.string({
+      error: "Parents number is required!",
+    }),
+    fatherName: z.string({
+      error: "Father name is required!",
+    }),
+    motherName: z.string({
+      error: "Mother name is required!",
+    }),
+    dateOfBirth: z.string({
+      error: "Date of birth is required!",
+    }),
+    bCertNid: z.string().optional(),
+    bloodGroup: z.nativeEnum(BloodGroup),
+    fatherNid: z.string().optional(),
+    motherNid: z.string().optional(),
+    roll: z.string().optional(),
+    registration: z.string().optional(),
+    session: z.string().optional(),
+    gender: z.nativeEnum(Gender),
+    address: z.string({
+      error: "Address is required!",
+    }),
+    profilePhoto: z.string().optional(),
+  }),
 });
 
-// ----------------- Create CR -----------------
-export const createCRValidationSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(6),
-  displayName: z.string().min(2),
-  role: z.literal("CR"),
-  profileUrl: z.string().optional(),
-  status: z.enum(["ACTIVE", "INACTIVE"]).optional(),
-  batchId: z.string(),
-  studentId: z.string(),
+// ---------------- CREATE CR ----------------
+const createCr = z.object({
+  password: z.string({
+    error: "Password is required",
+  }),
+  cr: z.object({
+    name: z.string({
+      error: "Name is required!",
+    }),
+    email: z.string({
+      error: "Email is required!",
+    }).email("Invalid email"),
+    contactNumber: z.string({
+      error: "Contact Number is required!",
+    }),
+    profilePhoto: z.string().optional(),
+  }),
 });
 
-export const UserValidation = {
-  createStudentValidationSchema,
-  createTeacherValidationSchema,
-  createAdminValidationSchema,
-  createCRValidationSchema,
+// ---------------- UPDATE PROFILE STATUS ----------------
+const updateStatus = z.object({
+  body: z.object({
+    status: z.nativeEnum(UserStatus),
+  }),
+});
+
+export const userValidation = {
+  createAdmin,
+  createTeacher,
+  createStudent,
+  createCr,
+  updateStatus,
 };

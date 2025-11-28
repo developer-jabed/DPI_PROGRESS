@@ -1,0 +1,81 @@
+enum UserRole {
+  ADMIN
+  TEACHER
+  STUDENT
+  CR
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum BloodGroup {
+  A_POSITIVE
+  B_POSITIVE
+  AB_POSITIVE
+  O_POSITIVE
+  A_NEGATIVE
+  B_NEGATIVE
+  AB_NEGATIVE
+  O_NEGATIVE
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum Shift {
+  MORNING
+  DAY
+}
+
+enum GroupName {
+  A
+  B
+}
+
+enum DepartmentName {
+  CIVIL
+  COMPUTER
+  ELECTRICAL
+  ARCHITECTURE
+  POWER
+  MECHANICAL
+}
+
+enum SemesterName {
+  SEM1
+  SEM2
+  SEM3
+  SEM4
+  SEM5
+  SEM6
+  SEM7
+  SEM8
+}
+
+enum AttendanceType {
+  PRESENT
+  ABSENT
+  LATE
+  LEAVE
+}
+
+enum NotificationType {
+  GLOBAL
+  DEPARTMENT
+  SEMESTER
+  BATCH
+  GROUP
+  USER
+}
+
+enum PromotionStatus {
+  PASS
+  CARRY
+  DROPOUT
+}

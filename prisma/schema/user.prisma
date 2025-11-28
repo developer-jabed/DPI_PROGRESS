@@ -1,0 +1,123 @@
+// =======================
+// prisma/user.prisma
+// =======================
+model User {
+  id                 String      @id @default(uuid())
+  email              String      @unique
+  password           String
+  role               UserRole
+  needPasswordChange Boolean     @default(true)
+  status             UserStatus  @default(ACTIVE)
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+
+  admin    Admin?
+  teacher  Teacher?
+  student  Student?
+  cr       Cr?
+
+  @@map("users")
+}
+
+model Admin {
+  id            String    @id @default(uuid())
+  name          String
+  email         String    @unique
+  profilePhoto  String?
+  contactNumber String
+  isDeleted     Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  user User @relation(fields: [email], references: [email])
+
+  @@map("admins")
+}
+
+model Teacher {
+  id            String    @id @default(uuid())
+  name          String
+  email         String    @unique
+  profilePhoto  String?
+  contactNumber String
+  qualification String
+  bio           String?
+  isDeleted     Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  user User @relation(fields: [email], references: [email])
+  assignedBatches Batch[] @relation("TeacherBatches")
+  teacherSubjects TeacherSubject[]
+
+  attendances    Attendance[]
+  routines       Routine[]
+  eventsCreated  Event[]        @relation("TeacherEvents")
+  notifications  Notification[] @relation("TeacherNotifications")
+
+  @@map("teachers")
+}
+
+model Student {
+  id            String    @id @default(uuid())
+  name          String
+  email         String    @unique
+  profilePhoto  String?
+  contactNumber String
+  parentsNumber String
+  fatherName    String
+  motherName    String
+  dateOfBirth   String
+  bCertNid      String?
+  bloodGroup    BloodGroup
+  fatherNid     String?
+  motherNid     String?
+  roll          String?
+  registration  String?
+  session       String?
+  gender        Gender
+  address       String
+  isDeleted     Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  user User @relation(fields: [email], references: [email])
+  cr   Cr?
+  studentGroups StudentGroup[]
+  attendances Attendance[]
+  formFillUps FormFillUp[]
+  semesterPromotions SemesterPromotion[]
+
+  routines       Routine[]      @relation("StudentRoutines")
+  notifications  Notification[] @relation("StudentNotifications")
+
+  @@map("students")
+}
+
+model Cr {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  userId    String   @unique
+  studentId String   @unique
+  groupId   String?  @unique
+
+  user     User     @relation(fields: [userId], references: [id])
+  student  Student  @relation(fields: [studentId], references: [id])
+  group    Group?   @relation("CRGroup", fields: [groupId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+  @@map("crs")
+}
+
+model StudentGroup {
+  id        String   @id @default(uuid())
+  student   Student  @relation(fields: [studentId], references: [id])
+  studentId String
+  group     Group    @relation(fields: [groupId], references: [id])
+  groupId   String
+  createdAt DateTime @default(now())
+
+  @@map("student_groups")
+}
