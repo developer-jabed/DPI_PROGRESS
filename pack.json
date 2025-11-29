@@ -1,99 +1,147 @@
 {
   "info": {
-    "name": "Batch Management API",
-    "_postman_id": "abcd1234-5678-efgh-ijkl-9876543210",
-    "description": "API collection for managing batches",
+    "_postman_id": "dpi-academic-collection-001",
+    "name": "DPI Academic Management API",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
     {
-      "name": "Create Batch",
-      "request": {
-        "method": "POST",
-        "header": [
-          { "key": "Content-Type", "value": "application/json" }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"name\": \"Computer 1st Semester\",\n  \"department\": \"COMPUTER\",\n  \"group\": \"A\",\n  \"shift\": \"MORNING\",\n  \"semesterId\": \"semester-uuid-1\"\n}"
+      "name": "Department",
+      "item": [
+        {
+          "name": "Create Department",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "http://localhost:5000/api/v1/departments",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "v1", "departments"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"CIVIL\"\n}"
+            }
+          }
         },
-        "url": {
-          "raw": "http://localhost:5000/api/v1/batch",
-          "protocol": "http",
-          "host": ["localhost"],
-          "port": "5000",
-          "path": ["api", "v1", "batch"]
-        }
-      }
-    },
-    {
-      "name": "Get All Batches",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "http://localhost:5000/api/v1/batch?page=1&limit=10&sortBy=createdAt&sortOrder=desc&searchTerm=Computer",
-          "protocol": "http",
-          "host": ["localhost"],
-          "port": "5000",
-          "path": ["api", "v1", "batch"],
-          "query": [
-            { "key": "page", "value": "1" },
-            { "key": "limit", "value": "10" },
-            { "key": "sortBy", "value": "createdAt" },
-            { "key": "sortOrder", "value": "desc" },
-            { "key": "searchTerm", "value": "Computer" }
-          ]
-        }
-      }
-    },
-    {
-      "name": "Get Batch by ID",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "http://localhost:5000/api/v1/batch/{{batchId}}",
-          "protocol": "http",
-          "host": ["localhost"],
-          "port": "5000",
-          "path": ["api", "v1", "batch", "{{batchId}}"]
-        }
-      }
-    },
-    {
-      "name": "Update Batch",
-      "request": {
-        "method": "PATCH",
-        "header": [
-          { "key": "Content-Type", "value": "application/json" }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"name\": \"Computer 2nd Semester\",\n  \"department\": \"COMPUTER\",\n  \"group\": \"A\",\n  \"shift\": \"MORNING\",\n  \"semesterId\": \"semester-uuid-2\"\n}"
+        {
+          "name": "Get All Departments",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:5000/api/v1/departments?searchTerm=CIVIL&page=1&limit=10",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "v1", "departments"],
+              "query": [
+                { "key": "searchTerm", "value": "CIVIL" },
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" }
+              ]
+            }
+          }
         },
-        "url": {
-          "raw": "http://localhost:5000/api/v1/batch/{{batchId}}",
-          "protocol": "http",
-          "host": ["localhost"],
-          "port": "5000",
-          "path": ["api", "v1", "batch", "{{batchId}}"]
+        {
+          "name": "Get Department By ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:5000/api/v1/departments/{{departmentId}}",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "v1", "departments", "{{departmentId}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Department",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "http://localhost:5000/api/v1/departments/{{departmentId}}",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "v1", "departments", "{{departmentId}}"]
+            }
+          }
         }
-      }
+      ]
     },
     {
-      "name": "Delete Batch",
-      "request": {
-        "method": "DELETE",
-        "header": [],
-        "url": {
-          "raw": "http://localhost:5000/api/v1/batch/{{batchId}}",
-          "protocol": "http",
-          "host": ["localhost"],
-          "port": "5000",
-          "path": ["api", "v1", "batch", "{{batchId}}"]
+      "name": "Semester",
+      "item": [
+        {
+          "name": "Create Semester",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "http://localhost:5000/api/v1/semesters",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "v1", "semesters"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"FIRST\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get All Semesters",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:5000/api/v1/semesters?searchTerm=FIRST&page=1&limit=10",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "v1", "semesters"],
+              "query": [
+                { "key": "searchTerm", "value": "FIRST" },
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Semester By ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:5000/api/v1/semesters/{{semesterId}}",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "v1", "semesters", "{{semesterId}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Semester",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "http://localhost:5000/api/v1/semesters/{{semesterId}}",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "v1", "semesters", "{{semesterId}}"]
+            }
+          }
         }
-      }
+      ]
     }
   ]
 }

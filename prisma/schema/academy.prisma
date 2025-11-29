@@ -2,13 +2,16 @@
 // prisma/academy.prisma
 // =======================
 model Department {
-  id       String     @id @default(uuid())
-  name     DepartmentName   @unique
-  batches  Batch[]
-  subjects Subject[]
+  id        String     @id @default(uuid())
+  name      DepartmentName   @unique
+  batches   Batch[]
+  subjects  Subject[]
+  createdAt DateTime?   @default(now())
+  updatedAt DateTime?   @updatedAt
 
   @@map("departments")
 }
+
 
 model Semester {
   id       String         @id @default(uuid())
@@ -16,6 +19,8 @@ model Semester {
   batches  Batch[]
   promotionsFrom SemesterPromotion[] @relation("FromSemester")
   promotionsTo   SemesterPromotion[] @relation("ToSemester")
+  createdAt DateTime?   @default(now())
+  updatedAt DateTime?   @updatedAt
 
   @@map("semesters")
 }

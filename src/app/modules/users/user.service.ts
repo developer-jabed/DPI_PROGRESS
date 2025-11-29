@@ -1,4 +1,3 @@
-import { Admin, Teacher, Student, Cr, Prisma, UserRole, UserStatus } from "@prisma/client";
 import * as bcrypt from 'bcrypt';
 import { Request } from "express";
 import { fileUploader } from "../../helper/fileUploader";
@@ -6,6 +5,7 @@ import { prisma } from "../../shared/prisma";
 import { paginationHelper } from "../../helper/paginationHelper";
 import { userSearchAbleFields } from "./user.constant";
 import { IAuthUser, IPaginationOptions } from "./user.interface";
+import { Admin, Cr, Prisma, Student, Teacher, UserRole, UserStatus } from '@prisma/client';
 
 // ---------------- CREATE ADMIN ----------------
 const createAdmin = async (req: Request): Promise<Admin> => {
@@ -17,11 +17,24 @@ const createAdmin = async (req: Request): Promise<Admin> => {
 
     const hashedPassword = await bcrypt.hash(req.body.password, 10);
 
-    const userData = { email: req.body.admin.email, password: hashedPassword, role: UserRole.ADMIN };
-
     const result = await prisma.$transaction(async (tx) => {
-        await tx.user.create({ data: userData });
-        const createdAdmin = await tx.admin.create({ data: req.body.admin });
+        const user = await tx.user.create({
+            data: {
+                email: req.body.admin.email,
+                password: hashedPassword,
+                role: UserRole.ADMIN,
+                needPasswordChange: false,
+                status: UserStatus.ACTIVE,
+            },
+        });
+
+        const createdAdmin = await tx.admin.create({
+            data: {
+                ...req.body.admin,
+                userId: user.id,
+            },
+        });
+
         return createdAdmin;
     });
 
@@ -37,11 +50,25 @@ const createTeacher = async (req: Request): Promise<Teacher> => {
     }
 
     const hashedPassword = await bcrypt.hash(req.body.password, 10);
-    const userData = { email: req.body.teacher.email, password: hashedPassword, role: UserRole.TEACHER };
 
     const result = await prisma.$transaction(async (tx) => {
-        await tx.user.create({ data: userData });
-        const createdTeacher = await tx.teacher.create({ data: req.body.teacher });
+        const user = await tx.user.create({
+            data: {
+                email: req.body.teacher.email,
+                password: hashedPassword,
+                role: UserRole.TEACHER,
+                needPasswordChange: false,
+                status: UserStatus.ACTIVE,
+            },
+        });
+
+        const createdTeacher = await tx.teacher.create({
+            data: {
+                ...req.body.teacher,
+                userId: user.id,
+            },
+        });
+
         return createdTeacher;
     });
 
@@ -57,11 +84,25 @@ const createStudent = async (req: Request): Promise<Student> => {
     }
 
     const hashedPassword = await bcrypt.hash(req.body.password, 10);
-    const userData = { email: req.body.student.email, password: hashedPassword, role: UserRole.STUDENT };
 
     const result = await prisma.$transaction(async (tx) => {
-        await tx.user.create({ data: userData });
-        const createdStudent = await tx.student.create({ data: req.body.student });
+        const user = await tx.user.create({
+            data: {
+                email: req.body.student.email,
+                password: hashedPassword,
+                role: UserRole.STUDENT,
+                needPasswordChange: false,
+                status: UserStatus.ACTIVE,
+            },
+        });
+
+        const createdStudent = await tx.student.create({
+            data: {
+                ...req.body.student,
+                userId: user.id,
+            },
+        });
+
         return createdStudent;
     });
 
@@ -77,11 +118,25 @@ const createCr = async (req: Request): Promise<Cr> => {
     }
 
     const hashedPassword = await bcrypt.hash(req.body.password, 10);
-    const userData = { email: req.body.cr.email, password: hashedPassword, role: UserRole.CR };
 
     const result = await prisma.$transaction(async (tx) => {
-        await tx.user.create({ data: userData });
-        const createdCr = await tx.cr.create({ data: req.body.cr });
+        const user = await tx.user.create({
+            data: {
+                email: req.body.cr.email,
+                password: hashedPassword,
+                role: UserRole.CR,
+                needPasswordChange: false,
+                status: UserStatus.ACTIVE,
+            },
+        });
+
+        const createdCr = await tx.cr.create({
+            data: {
+                ...req.body.cr,
+                userId: user.id,
+            },
+        });
+
         return createdCr;
     });
 
@@ -97,13 +152,17 @@ const getAllFromDB = async (params: any, options: IPaginationOptions) => {
 
     if (searchTerm) {
         andConditions.push({
-            OR: userSearchAbleFields.map(field => ({ [field]: { contains: searchTerm, mode: 'insensitive' } }))
+            OR: userSearchAbleFields.map(field => ({
+                [field]: { contains: searchTerm, mode: 'insensitive' }
+            }))
         });
     }
 
     if (Object.keys(filterData).length > 0) {
         andConditions.push({
-            AND: Object.keys(filterData).map(key => ({ [key]: { equals: (filterData as any)[key] } }))
+            AND: Object.keys(filterData).map(key => ({
+                [key]: { equals: (filterData as any)[key] }
+            }))
         });
     }
 
@@ -124,18 +183,15 @@ const getAllFromDB = async (params: any, options: IPaginationOptions) => {
 
 // ---------------- CHANGE PROFILE STATUS ----------------
 const changeProfileStatus = async (id: string, status: UserStatus) => {
-    const updated = await prisma.user.update({ where: { id }, data: { status } });
-    return updated;
+    return prisma.user.update({ where: { id }, data: { status } });
 };
 
 // ---------------- GET MY PROFILE ----------------
 const getMyProfile = async (user: IAuthUser) => {
-    const userInfo = await prisma.user.findUniqueOrThrow({
-        where: { email: user.email, status: UserStatus.ACTIVE },
+    return prisma.user.findUniqueOrThrow({
+        where: { email: user.email },
         include: { admin: true, teacher: true, student: true, cr: true },
     });
-
-    return userInfo;
 };
 
 // ---------------- UPDATE MY PROFILE ----------------
@@ -146,17 +202,34 @@ const updateMyProfile = async (user: IAuthUser, req: Request) => {
         req.body.profilePhoto = uploaded?.secure_url;
     }
 
-    const userInfo = await prisma.user.findUniqueOrThrow({ where: { email: user.email, status: UserStatus.ACTIVE } });
-
+    const userInfo = await prisma.user.findUniqueOrThrow({ where: { email: user.email } });
     let updatedProfile;
-    if (userInfo.role === UserRole.ADMIN || userInfo.role === UserRole.SUPER_ADMIN) {
-        updatedProfile = await prisma.admin.update({ where: { email: user.email }, data: req.body });
-    } else if (userInfo.role === UserRole.TEACHER) {
-        updatedProfile = await prisma.teacher.update({ where: { email: user.email }, data: req.body });
-    } else if (userInfo.role === UserRole.STUDENT) {
-        updatedProfile = await prisma.student.update({ where: { email: user.email }, data: req.body });
-    } else if (userInfo.role === UserRole.CR) {
-        updatedProfile = await prisma.cr.update({ where: { email: user.email }, data: req.body });
+
+    switch (userInfo.role) {
+        case UserRole.ADMIN:
+            updatedProfile = await prisma.admin.update({
+                where: { userId: userInfo.id },
+                data: req.body,
+            });
+            break;
+        case UserRole.TEACHER:
+            updatedProfile = await prisma.teacher.update({
+                where: { userId: userInfo.id },
+                data: req.body,
+            });
+            break;
+        case UserRole.STUDENT:
+            updatedProfile = await prisma.student.update({
+                where: { userId: userInfo.id },
+                data: req.body,
+            });
+            break;
+        case UserRole.CR:
+            updatedProfile = await prisma.cr.update({
+                where: { userId: userInfo.id },
+                data: req.body,
+            });
+            break;
     }
 
     return updatedProfile;

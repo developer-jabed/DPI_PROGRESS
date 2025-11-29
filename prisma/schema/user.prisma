@@ -1,6 +1,3 @@
-// =======================
-// prisma/user.prisma
-// =======================
 model User {
   id                 String      @id @default(uuid())
   email              String      @unique
@@ -20,16 +17,16 @@ model User {
 }
 
 model Admin {
-  id            String    @id @default(uuid())
+  id            String   @id @default(uuid())
   name          String
-  email         String    @unique
-  profilePhoto  String?
   contactNumber String
-  isDeleted     Boolean   @default(false)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  profilePhoto  String?
+  isDeleted     Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @default(now())
 
-  user User @relation(fields: [email], references: [email])
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
 
   @@map("admins")
 }
@@ -37,16 +34,17 @@ model Admin {
 model Teacher {
   id            String    @id @default(uuid())
   name          String
-  email         String    @unique
   profilePhoto  String?
   contactNumber String
   qualification String
   bio           String?
   isDeleted     Boolean   @default(false)
   createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  updatedAt     DateTime  @default(now())
 
-  user User @relation(fields: [email], references: [email])
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
+
   assignedBatches Batch[] @relation("TeacherBatches")
   teacherSubjects TeacherSubject[]
 
@@ -61,7 +59,6 @@ model Teacher {
 model Student {
   id            String    @id @default(uuid())
   name          String
-  email         String    @unique
   profilePhoto  String?
   contactNumber String
   parentsNumber String
@@ -79,9 +76,11 @@ model Student {
   address       String
   isDeleted     Boolean   @default(false)
   createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  updatedAt     DateTime  @default(now())
 
-  user User @relation(fields: [email], references: [email])
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
+
   cr   Cr?
   studentGroups StudentGroup[]
   attendances Attendance[]
@@ -96,7 +95,6 @@ model Student {
 
 model Cr {
   id        String   @id @default(uuid())
-  email     String   @unique
   userId    String   @unique
   studentId String   @unique
   groupId   String?  @unique

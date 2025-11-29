@@ -1,0 +1,66 @@
+{
+  "info": {
+    "_postman_id": "batch-api-collection",
+    "name": "Batch API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Create Batch",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"departmentId\": \"<DEPARTMENT_ID>\",\n  \"semesterId\": \"<SEMESTER_ID>\",\n  \"shift\": \"FIRST\",\n  \"year\": 2025\n}"
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/v1/batch/create",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "v1", "batch", "create"]
+        }
+      }
+    },
+    {
+      "name": "Get All Batches",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/api/v1/batch?page=1&limit=10&searchTerm=FIRST&departmentId=<DEPARTMENT_ID>",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "v1", "batch"],
+          "query": [
+            { "key": "page", "value": "1" },
+            { "key": "limit", "value": "10" },
+            { "key": "searchTerm", "value": "FIRST" },
+            { "key": "departmentId", "value": "<DEPARTMENT_ID>" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Get Batch by ID",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/api/v1/batch/<BATCH_ID>",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "v1", "batch", "<BATCH_ID>"]
+        }
+      }
+    }
+  ]
+}

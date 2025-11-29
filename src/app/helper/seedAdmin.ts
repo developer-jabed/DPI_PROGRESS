@@ -5,50 +5,51 @@ import { UserRole } from "@prisma/client";
 
 export const seedAdmin = async () => {
   try {
-    // ✅ Validate ENV variables first
+    // ✅ Validate ENV variables
     if (!config.ADMIN_EMAIL || !config.ADMIN_PASSWORD) {
       throw new Error("❌ Missing ADMIN_EMAIL or ADMIN_PASSWORD in config.");
     }
 
-    // ✅ Check if admin already exists
-    const existingAdmin = await prisma.user.findUnique({
+    // ✅ Check if admin user already exists
+    const existingUser = await prisma.user.findUnique({
       where: { email: config.ADMIN_EMAIL },
     });
 
-    if (existingAdmin) {
-      console.log("✅ Admin already exists!");
-      console.log("admin:", existingAdmin)
+    if (existingUser) {
+      console.log("✅ Admin user already exists!");
       return;
     }
 
-    console.log("🛠️ Creating Admin...");
+    console.log("🛠️ Creating Admin user...");
 
-    // ✅ Hash password securely
+    // ✅ Hash password
     const saltRounds = Number(config.salt_round) || 10;
     const hashedPassword = await bcrypt.hash(config.ADMIN_PASSWORD, saltRounds);
 
     // ✅ Create User (Admin)
     const user = await prisma.user.create({
       data: {
-        displayName: "Admin",
         email: config.ADMIN_EMAIL,
         password: hashedPassword,
         role: UserRole.ADMIN,
-        profileUrl: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png",
+        needPasswordChange: false,
+        status: "ACTIVE",
       },
     });
 
-    // ✅ Optionally, also create entry in `Admin` table
+    console.log("🛠️ Creating Admin profile...");
+
+    // ✅ Create Admin profile referencing userId
     await prisma.admin.create({
       data: {
-        userId: user.id,
-        phoneNumber: "01700000000",
-        designation: "System Administrator",
-        profileUrl: user.profileUrl,
+        name: "System Admin",
+        contactNumber: "01700000000",
+        profilePhoto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png",
+        userId: user.id, // ✅ reference userId instead of email
       },
     });
 
-    console.log("🎉 Admin created successfully!");
+    console.log("🎉 Admin user and profile created successfully!");
   } catch (error) {
     console.error("❌ Error seeding admin:", error);
   } finally {
